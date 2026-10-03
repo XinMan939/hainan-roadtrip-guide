@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>湖南宁乡→海南 7天自驾攻略</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<style>
+  :root{
+    --primary:#667eea; --primary2:#764ba2; --accent:#f2719c;
+    --warn:#faad14; --ok:#52c41a; --danger:#ff4d4f;
+    --bg:#f5f7fb; --card:#ffffff; --text:#2b2f38; --sub:#6b7280; --mute:#9aa3af;
+    --line:#ecedf2; --radius:16px; --shadow:0 4px 20px rgba(40,44,80,.08);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.65;-webkit-font-smoothing:antialiased}
+  a{color:var(--primary);text-decoration:none}
+  .wrap{max-width:980px;margin:0 auto;padding:0 16px 80px}
+  /* HERO */
+  .hero{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;
+    padding:42px 20px 34px;border-radius:0 0 28px 28px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .hero:after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;
+    background:radial-gradient(circle,rgba(255,255,255,.18),transparent 70%)}
+  .hero h1{margin:0 0 6px;font-size:30px;letter-spacing:.5px}
+  .hero .sub{opacity:.92;font-size:15px}
+  .tags{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px}
+  .tag{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);
+    padding:4px 12px;border-radius:999px;font-size:13px}
+  .meta-row{margin-top:14px;display:flex;flex-wrap:wrap;gap:18px;font-size:13px;opacity:.95}
+  .meta-row b{font-weight:600}
+  /* TOP NAV */
+  .topnav{position:sticky;top:0;z-index:500;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);display:flex;gap:4px;overflow-x:auto;padding:8px 12px}
+  .topnav button{border:0;background:transparent;color:var(--sub);font-size:13.5px;padding:7px 12px;
+    border-radius:10px;cursor:pointer;white-space:nowrap;font-family:inherit}
+  .topnav button:hover{background:#eef0f7;color:var(--text)}
+  .topnav button.active{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff}
+  /* LAYOUT */
+  .layout{display:grid;grid-template-columns:1fr 168px;gap:22px;margin-top:22px}
+  @media(max-width:900px){.layout{grid-template-columns:1fr}.sidenav{display:none}}
+  .sidenav{position:sticky;top:64px;align-self:start;display:flex;flex-direction:column;gap:6px}
+  .sidenav a{font-size:13px;color:var(--sub);padding:6px 10px;border-radius:9px;border-left:3px solid transparent}
+  .sidenav a:hover{background:#eef0f7;color:var(--text)}
+  .sidenav a.active{border-left-color:var(--accent);color:var(--text);background:#f3f0fb;font-weight:600}
+  .sidenav .daylink{padding-left:20px}
+  /* SECTIONS */
+  section{scroll-margin-top:60px;margin-bottom:26px}
+  h2.sec{font-size:20px;margin:0 0 14px;display:flex;align-items:center;gap:9px}
+  h2.sec .ico{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;font-size:16px}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+  /* MAP */
+  #map{height:380px;border-radius:var(--radius);box-shadow:var(--shadow);z-index:1}
+  .map-note{font-size:12px;color:var(--mute);margin-top:8px}
+  /* OVERVIEW */
+  .ov{display:flex;flex-wrap:wrap;gap:10px}
+  .ov .chip{background:#eef1fb;border:1px solid #e2e6f7;color:#4b51a3;padding:8px 13px;border-radius:12px;font-size:13.5px}
+  /* DAY CARD */
+  .day{border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden;background:var(--card)}
+  .day-hd{display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;user-select:none}
+  .day-badge{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:15px;flex:none}
+  .day-hd .t{flex:1}
+  .day-hd .t .d{font-size:16.5px;font-weight:700}
+  .day-hd .t .s{font-size:12.5px;color:var(--sub)}
+  .day-hd .ar{transition:transform .25s;color:var(--mute)}
+  .day.collapsed .ar{transform:rotate(-90deg)}
+  .day-body{padding:0 18px 18px;display:block}
+  .day.collapsed .day-body{display:none}
+  .stop{display:flex;gap:14px;padding:12px 0;border-top:1px dashed var(--line);position:relative}
+  .stop:first-child{border-top:0}
+  .stop .tm{width:84px;flex:none;text-align:right;font-size:13px;color:var(--sub);padding-top:2px}
+  .stop .tm .du{display:block;color:var(--mute);font-size:11px;margin-top:2px}
+  .stop .dot{position:relative;flex:none;width:16px;display:flex;justify-content:center}
+  .stop .dot:before{content:"";width:12px;height:12px;border-radius:50%;background:var(--primary);margin-top:5px;border:3px solid #fff;box-shadow:0 0 0 2px var(--primary)}
+  .stop .dot:after{content:"";position:absolute;top:18px;bottom:-12px;width:2px;background:var(--line)}
+  .stop:last-child .dot:after{display:none}
+  .stop .body{flex:1;min-width:0}
+  .stop .nm{font-weight:600;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .stop .cost{font-size:12px;color:#b06a00;background:#fff5e0;border:1px solid #ffe2a8;padding:1px 8px;border-radius:8px}
+  .stop .desc{font-size:13.5px;color:#444;margin-top:3px}
+  .stop .tip{font-size:12.5px;color:#0a7d54;background:#eafaf1;border-left:3px solid var(--ok);padding:5px 9px;border-radius:0 8px 8px 0;margin-top:6px}
+  .stop .tn{font-size:12px;color:var(--primary);background:#eef1fb;padding:4px 9px;border-radius:8px;margin-top:7px;display:inline-block}
+  .stop label.cb{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--mute);margin-top:7px;cursor:pointer}
+  .route-line{font-size:12px;color:var(--sub);background:#f4f6fc;border-radius:8px;padding:6px 10px;margin:10px 0 0;display:flex;align-items:center;gap:7px}
+  .day-foot{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+  .day-foot .blk{font-size:13px;flex:1;min-width:200px}
+  .day-foot .blk b{color:var(--text)}
+  .day-foot .blk .lbl{color:var(--sub);font-size:12px;display:block;margin-bottom:3px}
+  /* FOOD GRID */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+  .food{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:14px;border-top:3px solid var(--accent)}
+  .food .nm{font-weight:700;font-size:15px}
+  .food .pr{color:#b06a00;font-size:13px;margin:3px 0}
+  .food .rc{font-size:12.5px;color:#555}
+  .food .sr{font-size:11px;color:var(--mute);margin-top:5px}
+  /* HOTELS */
+  .hotel{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:14px;margin-bottom:12px}
+  .hotel .a{font-weight:700;font-size:15px}
+  .hotel .p{color:#b06a00;font-size:13px;margin:2px 0}
+  .hotel .w{font-size:12.5px;color:#555}
+  /* PITFALLS */
+  .pit{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px dashed var(--line);font-size:13.5px}
+  .pit:first-child{border-top:0}
+  .pit .x{color:var(--danger);text-decoration:line-through;flex:1}
+  .pit .ok{color:var(--ok);font-weight:600;flex:1}
+  .pit .vs{color:var(--mute);padding:0 4px}
+  /* BUDGET */
+  table.bd{width:100%;border-collapse:collapse;font-size:13.5px}
+  table.bd th,table.bd td{padding:10px 8px;text-align:left;border-bottom:1px solid var(--line)}
+  table.bd th{color:var(--sub);font-weight:600;font-size:12.5px}
+  table.bd td input{width:88px;border:1px solid var(--line);border-radius:8px;padding:5px 7px;font-size:13px;font-family:inherit}
+  table.bd tr.total td{font-weight:700;font-size:15px;border-top:2px solid var(--primary)}
+  .bd-actions{margin-top:10px;display:flex;gap:10px;flex-wrap:wrap}
+  /* TIPS */
+  .tips li{margin-bottom:7px;font-size:13.5px}
+  /* TOOLBAR */
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 4px}
+  .btn{border:0;border-radius:11px;padding:9px 16px;font-size:13.5px;cursor:pointer;font-family:inherit;
+    background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;box-shadow:var(--shadow)}
+  .btn.ghost{background:#fff;color:var(--primary);border:1px solid #d7dbef}
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#2b2f38;color:#fff;
+    padding:10px 18px;border-radius:12px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .3s;z-index:999}
+  .toast.show{opacity:1}
+  footer{text-align:center;color:var(--mute);font-size:12px;margin-top:30px}
+  .leaflet-popup-content{font-size:13px}
+  .mk{width:24px;height:24px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:grid;place-items:center;
+    color:#fff;font-weight:700;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,.3);border:2px solid #fff}
+  .mk span{transform:rotate(45deg)}
+  .src-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:4px}
+  .src-dim{font-weight:700;margin:12px 0 2px;color:var(--primary);font-size:14px}
+  .src{background:#f7f8fc;border:1px solid #eef0f7;border-radius:10px;padding:9px 11px;font-size:13px;line-height:1.5}
+  .src a{color:var(--primary);word-break:break-all}
+  .src .ch{color:var(--mute);font-size:12px;margin:2px 0}
+  .src .st{display:inline-block;font-size:11px;padding:1px 7px;border-radius:20px;margin-left:6px;font-weight:600}
+  .st-confirmed{background:#e6f7ec;color:#1a7f43}
+  .st-est{background:#fff3e0;color:#b26a00}
+  .st-unknown{background:#fdecec;color:#c0392b}
+  .unc{background:#fff4f4;border:1px solid #f6d6d6;border-radius:10px;padding:10px 12px;margin-top:12px}
+  .unc li{margin-bottom:6px;color:#a23}
+  /* ---- RESEARCH PACKET 证据包 ---- */
+  .rp{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+  .rp-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px}
+  .rp-claim{font-weight:700;color:var(--ink);font-size:15px}
+  .badge{display:inline-block;font-size:11px;padding:2px 9px;border-radius:20px;font-weight:600;white-space:nowrap}
+  .cf-high{background:#e6f7ec;color:#1a7f43}
+  .cf-mid{background:#fff3e0;color:#b26a00}
+  .cf-low{background:#fdecec;color:#c0392b}
+  .tp-user{background:#eaf0ff;color:#2f5d9e}
+  .tp-official-realtime{background:#e6f7ec;color:#1a7f43}
+  .tp-official-web{background:#eef6ff;color:#2f6db0}
+  .tp-public{background:#f2eef7;color:#6b4ba0}
+  .tp-agent-inferred{background:#f3eef0;color:#8a5a6b}
+  .rp-meta{font-size:13px;color:var(--mute);line-height:1.7}
+  .rp-meta b{color:var(--ink2)}
+  .rp-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:5px}
+  .rp-row span{font-size:12px;color:var(--ink2)}
+  .rp-row b{color:var(--ink)}
+  .rp a{color:#2f6db0;word-break:break-all}
+  .rp-corrob{background:#f7f5f0;border-left:3px solid var(--accent);padding:5px 9px;font-size:12px;color:var(--ink2);margin-top:6px;border-radius:0 6px 6px 0}
+  /* ---- 摄影机位 ---- */
+  .photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+  .photo-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .photo-card h4{font-size:15px;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+  .photo-card .ph-meta{font-size:12px;color:var(--mute);margin-top:6px}
+  .photo-card .ph-tip{font-size:13px;color:var(--ink2);margin-top:7px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="wrap" style="padding-bottom:0">
+    <h1 id="hTitle"></h1>
+    <div class="sub" id="hSub"></div>
+    <div class="tags" id="hTags"></div>
+    <div class="meta-row" id="hMeta"></div>
+  </div>
+</div>
+
+<div class="topnav" id="topnav"></div>
+
+<div class="wrap">
+  <div class="toolbar">
+    <button class="btn" onclick="window.print()">🖨️ 导出 PDF</button>
+    <button class="btn ghost" onclick="copyMarkdown()">📋 复制 Markdown</button>
+    <button class="btn ghost" onclick="resetLocal()">♻️ 清空我的勾选/改动</button>
+  </div>
+
+  <div class="layout">
+    <div class="main">
+      <section id="sec-map">
+        <h2 class="sec"><span class="ico">🗺️</span>行程地图</h2>
+        <div id="map"></div>
+        <div class="map-note" id="mapNote"></div>
+      </section>
+
+      <section id="sec-overview">
+        <h2 class="sec"><span class="ico">📌</span>行程总览</h2>
+        <div class="card"><div class="ov" id="overview"></div></div>
+      </section>
+
+      <section id="sec-days">
+        <h2 class="sec"><span class="ico">📅</span>每日行程</h2>
+        <div id="days"></div>
+      </section>
+
+      <section id="sec-food">
+        <h2 class="sec"><span class="ico">🍜</span>美食推荐</h2>
+        <div class="grid" id="foods"></div>
+      </section>
+
+      <section id="sec-hotel">
+        <h2 class="sec"><span class="ico">🏨</span>住宿推荐</h2>
+        <div id="hotels"></div>
+      </section>
+
+      <section id="sec-pit">
+        <h2 class="sec"><span class="ico">⚠️</span>避坑指南</h2>
+        <div class="card" id="pits"></div>
+      </section>
+
+      <section id="sec-budget">
+        <h2 class="sec"><span class="ico">💰</span>预算估算</h2>
+        <div class="card">
+          <table class="bd" id="budget"></table>
+          <div class="bd-actions">
+            <button class="btn ghost" onclick="saveBudget()">💾 保存我的预算</button>
+            <span style="font-size:12px;color:var(--mute);align-self:center">可直接修改「舒适型」数字，合计自动重算</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="sec-tips">
+        <h2 class="sec"><span class="ico">💡</span>实用 Tips</h2>
+        <div class="card"><ul class="tips" id="tips"></ul></div>
+      </section>
+
+      <section id="sec-photo">
+        <h2 class="sec"><span class="ico">📸</span>摄影机位 / 出片点</h2>
+        <div class="card"><div class="photo-grid" id="photoGrid"></div></div>
+      </section>
+
+      <section id="sec-sources">
+        <h2 class="sec"><span class="ico">🔎</span>信息来源 / 存疑（多维度取证）</h2>
+        <div class="card" id="srcWrap"></div>
+      </section>
+    </div>
+
+    <aside class="sidenav" id="sidenav"></aside>
+  </div>
+
+  <footer id="foot"></footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+/* ====== 数据注入点：构建脚本会把下方 {"meta": {"title": "湖南宁乡→海南 7天自驾攻略", "subtitle": "自驾过海 · 东海岸经典线（海口—文昌—琼海—万宁—陵水—三亚）", "city": "海南", "days": 7, "theme": "海岛自驾 · 过海轮渡", "departure": "湖南宁乡", "tags": ["自驾", "过海轮渡", "东海岸", "海岛", "一周"], "updated": "2026-10-03", "note": "坐标为 GCJ-02；轮渡票价/港口规则为 2026 年最新，出行前以『琼州海峡轮渡管家』实时为准；部分景点坐标因高德 QPS 限流采用近似，建议出行前用高德复核。"}, "overview": ["Day1 自驾赴粤：宁乡→桂林（约580km/7h），夜游两江四湖", "Day2 入粤抵徐闻：桂林→徐闻港（约520km/6.5h），线上购轮渡票候渡", "Day3 过海入琼：徐闻港→海口新海港（航程约90min），骑楼老街+火山口", "Day4 东线文昌→琼海：东郊椰林/航天发射场→博鳌论坛/玉带滩", "Day5 万宁冲浪日：日月湾冲浪、石梅湾、兴隆热带植物园", "Day6 陵水→三亚：分界洲岛玻璃海→亚龙湾/三亚湾夜市", "Day7 三亚深度+启程返程：南山寺/天涯海角，傍晚西线返海口徐闻"], "days": [{"day": 1, "title": "自驾赴粤 · 桂林夜色", "color": "#f6a085", "summary": "从宁乡出发，沿二广/泉南高速南下，傍晚抵达桂林，逛两江四湖与象鼻山。", "stops": [{"name": "宁乡出发", "time": "07:30", "duration": "—", "cost": "—", "desc": "加满油/充满电，检查轮胎与行驶证、身份证、ETC；导航设『桂林市区』。", "tip": "新能源车主提前规划沿途充电桩（长沙、衡阳、永州、桂林服务区均有），每300km补能一次。"}, {"name": "桂林 · 象鼻山 / 两江四湖", "time": "17:30-20:30", "duration": "3h", "cost": "象鼻山¥55", "coord": [110.1798, 25.2356], "desc": "桂林城徽象鼻山，夜游两江四湖看日月双塔灯光，榕杉湖步道很出片。", "tip": "白天赶路较累，夜间轻逛即可；想看《印象刘三姐》需提前订票。"}], "food": ["午餐：途经服务区或永州/桂林米粉", "晚餐：桂林米粉、啤酒鱼（正阳步行街）"], "stay": "住桂林市区（两江四湖/火车站周边），方便次日起早赶路"}, {"day": 2, "title": "南下抵徐闻 · 候渡", "color": "#f7b267", "summary": "桂林经梧州、玉林、湛江一路向南，傍晚到徐闻港，办好轮渡手续或在港口附近住下。", "stops": [{"name": "桂林→徐闻港", "time": "08:00-15:00", "duration": "约6.5h/520km", "cost": "油费+过路费", "coord": [110.165, 20.28], "desc": "走 G65/G80→玉林→湛江→徐闻（雷州半岛最南端）。全程高速，服务区密集。", "tip": "务必提前在『琼州海峡轮渡管家』小程序购好次日船票；燃油车开航前90分钟、新能源120分钟到港。", "transportToNext": "傍晚到港后按票进港待渡，或住徐闻县城次日一早过海"}, {"name": "徐闻港候渡", "time": "16:00-", "duration": "待渡", "cost": "—", "coord": [110.165, 20.28], "desc": "大陆最南端登船口。徐闻港↔海口新海港为最优航线（航程约90min、班次最密、设施新）。", "tip": "人车分离：乘客带身份证到候船厅取票，司机开车上船；新能源专班走海安新港↔秀英港（人车不同船）。"}], "food": ["午餐：玉林/湛江途中", "晚餐：徐闻县城海鲜、腌粉"], "stay": "住徐闻港周边或徐闻县城；次日一早即可登船过海"}, {"day": 3, "title": "过海入琼 · 海口初印象", "color": "#4facfe", "summary": "轮渡过琼州海峡抵海口，下午逛骑楼老街与火山口地质公园，吃一顿椰子鸡。", "stops": [{"name": "徐闻港→海口新海港（轮渡）", "time": "08:30-11:30", "duration": "约3h(含排队)", "cost": "小车进岛¥415.5含司机+乘客¥41.5/人", "coord": [110.07, 20.08], "desc": "航程约90分钟，车辆随船过海；下船先司机取车、再与乘客汇合。", "tip": "开航前6小时内才能进港；迟到会被改签下一班。关注停航公告（大雾/台风）。"}, {"name": "海口骑楼老街", "time": "13:30-16:00", "duration": "2.5h", "cost": "免费", "coord": [110.3356, 20.0448], "desc": "南洋风骑楼建筑群，水巷口、中山路一带最集中，老字号与咖啡馆交错。", "tip": "尝海南粉、清补凉；骑楼拍照上午顺光更出片。"}, {"name": "海口火山口地质公园", "time": "16:30-18:30", "duration": "2h", "cost": "¥50", "coord": [110.2234, 19.9298], "desc": "雷琼世界地质公园，登马鞍岭火山口看玄武岩地貌，城市绿肺。", "tip": "傍晚光线柔和、登顶不晒；带水与驱蚊。"}], "food": ["晚餐：椰子鸡火锅（海口招牌，文昌鸡+椰子水汤底），人均¥80-120"], "stay": "住海口（西海岸或骑楼附近，地铁+滨海便利）"}, {"day": 4, "title": "东线 · 文昌侨乡 → 琼海博鳌", "color": "#43c6ac", "summary": "沿东线高速南下，文昌看东郊椰林与航天发射场，下午到琼海博鳌。", "stops": [{"name": "文昌 · 东郊椰林", "time": "09:30-11:30", "duration": "2h", "cost": "免费", "coord": [110.8629, 19.559], "desc": "万亩原生态椰林海岸，椰影沙滩、渔村风情，骑行或漫步都舒服。", "tip": "可顺路去淇水湾火箭观测点蹲发射（需提前查发射日程，不保证）。"}, {"name": "文昌航天发射场（龙楼镇）", "time": "11:30-12:30", "duration": "1h", "cost": "观礼台¥50-100(以官方为准)", "coord": [110.951, 19.614], "desc": "我国最年轻发射场，低纬滨海，常发长征系列与空间站货运船。", "tip": "非发射期以观礼/科普参观为主；关注官方发射日程再决定是否停留。"}, {"name": "琼海 · 博鳌亚洲论坛", "time": "15:00-17:30", "duration": "2.5h", "cost": "会址¥60/玉带滩另购", "coord": [110.5762, 19.214], "desc": "万泉河入海口，论坛永久会址+玉带滩（河海分隔的狭长沙滩），万泉河游船可加。", "tip": "玉带滩与博鳌水城联游；傍晚河边散步很惬意。"}], "food": ["午餐：文昌鸡（四大名菜之首），人均¥60", "晚餐：琼海杂粮甜品、嘉积鸭"], "stay": "住琼海或继续开到万宁（约50km/40min）"}, {"day": 5, "title": "万宁 · 冲浪与海岸", "color": "#a18cd1", "summary": "万宁是海南冲浪与滨海度假核心，日月湾浪点、石梅湾白沙滩、兴隆植物园。", "stops": [{"name": "日月湾冲浪", "time": "09:30-12:00", "duration": "2.5h", "cost": "冲浪体验¥150-300/课", "coord": [110.0738, 18.6958], "desc": "国家冲浪训练基地，浪稳适合新手；岸边冲浪店、咖啡馆、滑板文化浓。", "tip": "零基础报一节体验课即可；不下水也适合海边咖啡发呆、拍日落。"}, {"name": "石梅湾 / 神州半岛", "time": "14:30-17:00", "duration": "2.5h", "cost": "免费(灯塔步行)", "coord": [110.2, 18.7], "desc": "石梅湾白沙滩+九里书屋文艺感强；神州半岛灯塔是网红出片机位。", "tip": "神州半岛灯塔需步行或骑行进，日落前1小时最出片。"}, {"name": "兴隆热带植物园", "time": "17:00-18:30", "duration": "1.5h", "cost": "¥50", "coord": [110.11, 18.74], "desc": "华侨农场旗下，咖啡、胡椒、可可等热带作物科普，可尝兴隆咖啡。", "tip": "傍晚前入园避开正午暴晒；园区较大建议乘电瓶车。"}], "food": ["午餐：日月湾冲浪主题餐吧", "晚餐：万宁海鲜/兴隆咖啡+印尼风味小吃，人均¥80"], "stay": "住万宁（石梅湾/日月湾/神州半岛，民宿与度假酒店多）"}, {"day": 6, "title": "陵水 → 三亚", "color": "#f78fb3", "summary": "陵水分界洲岛看玻璃海，下午抵达三亚，亚龙湾戏水、三亚湾夜市收尾。", "stops": [{"name": "陵水 · 分界洲岛", "time": "09:30-12:30", "duration": "3h", "cost": "船票+门票¥130左右", "coord": [110.2002, 18.5786], "desc": "牛岭分隔南北气候，海水能见度极高（玻璃海），潜水/摩托艇/海洋馆都行。", "tip": "上岛轮渡约15min；防晒+防水袋必备；旺季早上去人少。"}, {"name": "三亚 · 亚龙湾", "time": "15:00-17:30", "duration": "2.5h", "cost": "免费(沙滩)", "coord": [109.633, 18.219], "desc": "三亚最负盛名海湾，沙细水清，适合游泳与沙滩漫步。", "tip": "亚龙湾沙滩对游客开放；高端酒店区公共段可进，停车问清。"}, {"name": "三亚湾 · 椰梦长廊 / 第一市场", "time": "18:30-21:00", "duration": "2.5h", "cost": "晚餐人均¥100-150", "coord": [109.5, 18.27], "desc": "22km椰林海岸线看日落；第一市场买海鲜找加工店现做，最本地。", "tip": "海鲜加工先问清『加工费/秤』，货比两家；椰梦长廊蓝调时刻最出片。"}], "food": ["午餐：陵水酸粉、疍家海鲜", "晚餐：第一市场海鲜加工（和乐蟹/芒果螺/清蒸鱼）"], "stay": "住三亚（三亚湾便利省钱/亚龙湾度假感强/海棠湾近免税店）"}, {"day": 7, "title": "三亚深度 + 启程返程", "color": "#fddb92", "summary": "上午玩南山寺或天涯海角，下午视体力西线返海口徐闻（岛内约300km/4h），夜渡或续返。", "stops": [{"name": "南山文化旅游区", "time": "09:00-12:00", "duration": "3h", "cost": "¥108", "coord": [109.2039, 18.2971], "desc": "108米海上观音，南山寺祈福、海滨园林，佛教文化地标。", "tip": "园区大，电瓶车省力；防晒与饮水备足。"}, {"name": "天涯海角 / 海棠湾免税（二选一）", "time": "13:30-15:30", "duration": "2h", "cost": "天涯¥64/免税店免费", "coord": [109.27, 18.3], "desc": "天涯海角是地标打卡；想购物去海棠湾国际免税城（需离岛机票/船票提货）。", "tip": "免税购物提前在『cdf海南免税』 APP 下单，凭离岛凭证提货。"}, {"name": "西线返程：三亚→海口→徐闻", "time": "16:00-21:00", "duration": "约4-5h(含西线高速)", "cost": "油费+返程轮渡", "coord": [110.07, 20.08], "desc": "走海南西线高速（环岛西线）经尖峰岭/莺歌海/儋州返海口，沿海风光与原生态强于东线。", "tip": "当晚可赶徐闻港夜渡返粤，或海口住一晚次日过海；返程大陆段（徐闻→宁乡约1135km）建议再预留2天。"}], "food": ["午餐：南山素斋或三亚本地菜", "晚餐：返程途中简餐"], "stay": "夜宿徐闻港附近，或直接开回广东境内"}], "foods": [{"name": "文昌鸡", "price": "人均¥60", "rec": "白切蘸酱+鸡油饭，海南四大名菜之首", "source": "公开资料+大众点评"}, {"name": "椰子鸡火锅", "price": "人均¥80-120", "rec": "文昌鸡+椰子水汤底，海口/三亚均有", "source": "门店"}, {"name": "清补凉 / 海南粉", "price": "¥10-20", "rec": "海口街头消暑甜品与早餐粉", "source": "本地惯例"}, {"name": "三亚第一市场海鲜", "price": "人均¥100-150", "rec": "自选海鲜+加工店现做，和乐蟹/芒果螺", "source": "公开资料"}, {"name": "兴隆咖啡 / 印尼小吃", "price": "¥20-40", "rec": "万宁兴隆华侨风味", "source": "本地惯例"}, {"name": "陵水酸粉", "price": "¥15", "rec": "陵水特色米粉，酸辣开胃", "source": "公开资料"}], "hotels": [{"area": "海口（西海岸/骑楼附近）", "price": "¥250-600/晚", "rec": "地铁便利、近滨海与老街，适合首晚休整"}, {"area": "万宁（石梅湾/日月湾/神州半岛）", "price": "¥300-900/晚", "rec": "度假酒店与冲浪民宿多，氛围年轻"}, {"area": "三亚（三亚湾/亚龙湾/海棠湾）", "price": "¥350-1200/晚", "rec": "三亚湾性价比高、亚龙湾度假感强、海棠湾近免税店"}, {"area": "徐闻（过海前一晚）", "price": "¥150-300/晚", "rec": "港口附近家庭旅馆，方便次日早渡"}], "pitfalls": [{"wrong": "到港口现场买轮渡票", "right": "提前在『琼州海峡轮渡管家』线上购票（进岛预售15天/每日9:00放票），节假日/新能源专班尤需抢"}, {"wrong": "新能源车直接开去普通船", "right": "新能源必须走海安新港↔秀英港专班，且人车不同船（司机搭保姆船），提前15天抢专班票"}, {"wrong": "卡点到港", "right": "燃油车开航前90分钟、新能源120分钟到港；开航前6h内才放行进港，迟到改签下一班"}, {"wrong": "10月只带夏装", "right": "海南10月仍30°C+且午后多雷阵雨，防晒+雨具+驱蚊+薄外套（甲板风大）都要带"}, {"wrong": "岛内超速赶路", "right": "海南区间测速多、限速严，环岛高速别飙车，预留堵车与景点停车时间"}, {"wrong": "三亚海鲜不问价就加工", "right": "第一市场先确认『秤+加工费』，货比两家，保留小票"}, {"wrong": "忽略停航风险", "right": "大雾/台风会停航，出发前查『琼州海峡轮渡管家』公告，往返都留1天缓冲"}], "budget": [{"cat": "油费/电费(往返约3000km)", "eco": "¥800(新能源)", "comfort": "¥2400(燃油SUV)"}, {"cat": "过路费(大陆高速往返)", "eco": "¥1100", "comfort": "¥1100"}, {"cat": "轮渡(小车往返+2人)", "eco": "¥1000", "comfort": "¥1000"}, {"cat": "住宿(约6晚)", "eco": "¥1500", "comfort": "¥3000"}, {"cat": "餐饮(2人×7天)", "eco": "¥2100", "comfort": "¥4200"}, {"cat": "门票/体验", "eco": "¥600", "comfort": "¥1100"}], "tips": ["核心前提：自驾去海南必须轮渡。最优航线徐闻港↔海口新海港，航程约90分钟。", "购票唯一官方：『琼州海峡轮渡管家』小程序/APP；新能源专班走海安新港↔秀英港。", "总耗时参考：宁乡→徐闻港约1135km/11.7h；海口→三亚东线约272km/3.5h（均高德实测）。", "真正在海南游玩约5天（Day3-7），往返各需1-2天驾驶，整趟约9天；若只休7天可压缩 Day1 直达湛江。", "10月气候：海口/三亚实测29-34°C、午后雷阵雨，带防晒+雨具；台风季末仍需关注停航。", "岛内充电：新能源覆盖尚可但西线稀疏，提前规划；燃油车过海前加满油。", "免税购物：海棠湾/日月广场凭离岛凭证提货，提前在 cdf APP 下单更划算。", "地图坐标 GCJ-02，与高德底图对齐；部分景点坐标为近似，出行前用高德复核。"], "photoSpots": [{"name": "万宁日月湾日落", "bestTime": "日落前1小时", "spotType": "海岸/冲浪", "tip": "海边咖啡座+冲浪剪影，广角低角度拍浪花与晚霞"}, {"name": "神州半岛灯塔", "bestTime": "下午至日落", "spotType": "地标", "tip": "步行/骑行进半岛，白灯塔配蓝海，顺光出片"}, {"name": "陵水分界洲岛玻璃海", "bestTime": "上午", "spotType": "海岛", "tip": "上岛后栈道俯拍海水渐变蓝绿，防水壳拍水下"}, {"name": "三亚湾椰梦长廊蓝调", "bestTime": "日落后30分钟", "spotType": "夜景/海岸", "tip": "22km椰林+晚霞，三脚架长曝拍车流与天空"}, {"name": "海口骑楼老街", "bestTime": "上午顺光", "spotType": "人文", "tip": "水巷口骑楼立面+斑驳墙，广角仰拍建筑线条"}, {"name": "文昌淇水湾火箭观测", "bestTime": "发射日(需查日程)", "spotType": "特殊", "tip": "蹲长征/货运船发射，长焦拍升空，非发射期不保证"}], "research": [{"dimension": "坐标/POI", "claim": "宁乡→徐闻港 驾车约1134.95km、约11.67小时（高德路径规划，速度最快策略）", "sourceType": "official-web", "sourceName": "高德地图 Web 服务", "channel": "高德 driving 方向 API", "url": "https://lbs.amap.com/", "assertType": "运营事实", "checkedAt": "2026-10-03", "confidence": "high", "impact": "transport", "routeImpact": "会改变路线"}, {"dimension": "坐标/POI", "claim": "海口→三亚（东线）驾车约271.8km、约3.53小时（高德路径规划）", "sourceType": "official-web", "sourceName": "高德地图 Web 服务", "channel": "高德 driving 方向 API", "url": "https://lbs.amap.com/", "assertType": "运营事实", "checkedAt": "2026-10-03", "confidence": "high", "impact": "transport", "routeImpact": "顺路"}, {"dimension": "坐标/POI", "claim": "文昌东郊椰林 [110.8629,19.5590]、陵水分界洲岛 [110.2002,18.5786]、三亚南山寺 [109.2039,18.2971]、桂林市 [110.1798,25.2356]、海口火山口 [110.2234,19.9298] 为 高德地理编码返回坐标(GCJ-02)", "sourceType": "official-web", "sourceName": "高德地图 Web 服务", "channel": "高德 geo 地理编码 API", "url": "https://lbs.amap.com/", "assertType": "运营事实", "checkedAt": "2026-10-03", "confidence": "high", "impact": "visual", "routeImpact": "顺路"}, {"dimension": "坐标/POI", "claim": "海口骑楼老街、琼海博鳌、万宁日月湾、三亚亚龙湾坐标为高精度近似(GCJ-02)，因高德免费 Key 当日 QPS 限流未二次核验", "sourceType": "agent-inferred", "sourceName": "WorkBuddy 近似推算", "channel": "已知地标坐标", "assertType": "推断", "checkedAt": "2026-10-03", "confidence": "mid", "impact": "visual", "routeImpact": "顺路"}, {"dimension": "天气/季节", "claim": "10月上旬海口 29-34°C 多云/雷阵雨，三亚 31-34°C 多云/雷阵雨（高德实况预报 10-03 至 10-06）", "sourceType": "official-web", "sourceName": "高德地图天气 API", "channel": "高德 weather 天气 API", "url": "https://lbs.amap.com/", "assertType": "运营事实", "checkedAt": "2026-10-03", "confidence": "high", "impact": "schedule", "routeImpact": "顺路"}, {"dimension": "大交通/轮渡", "claim": "小车过海票价：进岛415.5元/车(含司机1人)、出岛413.5元/车；乘客41.5元/人；1.2-1.5m儿童22.5元；最优航线徐闻港↔海口新海港(航程约90分钟)", "sourceType": "official-web", "sourceName": "徐闻港官网 / 琼州海峡轮渡管家", "channel": "WebSearch 徐闻港官网+轮渡管家", "url": "http://www.xuwen.gov.cn/", "assertType": "运营事实", "checkedAt": "2026-10-03", "confidence": "high", "impact": "transport", "routeImpact": "会改变路线"}, {"dimension": "大交通/轮渡", "claim": "新能源车必须走『海安新港↔秀英港』专班，人车不同船(司机搭保姆船)，提前15天抢专班票；燃油车开航前90分钟、新能源120分钟到港", "sourceType": "public", "sourceName": "琼州海峡轮渡管家 / 太平洋汽车网", "channel": "WebSearch 轮渡攻略(2026)", "url": "https://m.pcauto.com.cn/baike/2049158/3069189", "assertType": "运营事实", "checkedAt": "2026-10-03", "confidence": "high", "impact": "transport", "routeImpact": "会改变路线"}, {"dimension": "玩法/路线", "claim": "第一次来海南最经典的7日海岸线为东线：海口→文昌→琼海→万宁→陵水→三亚（任意两城车程约1h，也可全程自驾沿海公路）", "sourceType": "public", "sourceName": "海南旅游知识库(ima.qq.com wiki)", "channel": "WebSearch 海南路线", "url": "https://ima.qq.com/", "assertType": "体验判断", "checkedAt": "2026-10-03", "confidence": "mid", "impact": "schedule", "routeImpact": "顺路"}, {"dimension": "费用参考", "claim": "合肥→三亚类似里程自驾参考：燃油SUV油费约1600+过路约800+轮渡小车415(含司机)+乘客41.5/人+住宿餐饮约900 ≈ 3800元/2人（可作本线费用量级参照）", "sourceType": "public", "sourceName": "新浪汽车自驾费用拆解", "channel": "WebSearch 自驾费用", "url": "https://www.sina.cn/news/article/comos_niqskus6012008.html", "assertType": "体验判断", "checkedAt": "2026-10-03", "confidence": "mid", "impact": "booking", "routeImpact": "顺路"}], "uncertain": ["轮渡节假日/暑期票源紧张，以『琼州海峡轮渡管家』实时放票与候补为准，本攻略票价为2026年参考。", "文昌航天发射观礼需提前查官方发射日程，非发射期仅科普参观，不保证看到升空。", "岛内景区票价、开放时间、停车以各官方公众号/现场为准，页面数值为参考。", "部分景点坐标（海口骑楼、琼海博鳌、万宁日月湾、三亚亚龙湾）为近似，出行前用高德复核。", "台风/大雾可能临时停航，往返均建议预留至少1天缓冲，避免影响返程。"]} 替换为真实 JSON ====== */
+const GUIDE = (function(){ try { return {"meta": {"title": "湖南宁乡→海南 7天自驾攻略", "subtitle": "自驾过海 · 东海岸经典线（海口—文昌—琼海—万宁—陵水—三亚）", "city": "海南", "days": 7, "theme": "海岛自驾 · 过海轮渡", "departure": "湖南宁乡", "tags": ["自驾", "过海轮渡", "东海岸", "海岛", "一周"], "updated": "2026-10-03", "note": "坐标为 GCJ-02；轮渡票价/港口规则为 2026 年最新，出行前以『琼州海峡轮渡管家』实时为准；部分景点坐标因高德 QPS 限流采用近似，建议出行前用高德复核。"}, "overview": ["Day1 自驾赴粤：宁乡→桂林（约580km/7h），夜游两江四湖", "Day2 入粤抵徐闻：桂林→徐闻港（约520km/6.5h），线上购轮渡票候渡", "Day3 过海入琼：徐闻港→海口新海港（航程约90min），骑楼老街+火山口", "Day4 东线文昌→琼海：东郊椰林/航天发射场→博鳌论坛/玉带滩", "Day5 万宁冲浪日：日月湾冲浪、石梅湾、兴隆热带植物园", "Day6 陵水→三亚：分界洲岛玻璃海→亚龙湾/三亚湾夜市", "Day7 三亚深度+启程返程：南山寺/天涯海角，傍晚西线返海口徐闻"], "days": [{"day": 1, "title": "自驾赴粤 · 桂林夜色", "color": "#f6a085", "summary": "从宁乡出发，沿二广/泉南高速南下，傍晚抵达桂林，逛两江四湖与象鼻山。", "stops": [{"name": "宁乡出发", "time": "07:30", "duration": "—", "cost": "—", "desc": "加满油/充满电，检查轮胎与行驶证、身份证、ETC；导航设『桂林市区』。", "tip": "新能源车主提前规划沿途充电桩（长沙、衡阳、永州、桂林服务区均有），每300km补能一次。"}, {"name": "桂林 · 象鼻山 / 两江四湖", "time": "17:30-20:30", "duration": "3h", "cost": "象鼻山¥55", "coord": [110.1798, 25.2356], "desc": "桂林城徽象鼻山，夜游两江四湖看日月双塔灯光，榕杉湖步道很出片。", "tip": "白天赶路较累，夜间轻逛即可；想看《印象刘三姐》需提前订票。"}], "food": ["午餐：途经服务区或永州/桂林米粉", "晚餐：桂林米粉、啤酒鱼（正阳步行街）"], "stay": "住桂林市区（两江四湖/火车站周边），方便次日起早赶路"}, {"day": 2, "title": "南下抵徐闻 · 候渡", "color": "#f7b267", "summary": "桂林经梧州、玉林、湛江一路向南，傍晚到徐闻港，办好轮渡手续或在港口附近住下。", "stops": [{"name": "桂林→徐闻港", "time": "08:00-15:00", "duration": "约6.5h/520km", "cost": "油费+过路费", "coord": [110.165, 20.28], "desc": "走 G65/G80→玉林→湛江→徐闻（雷州半岛最南端）。全程高速，服务区密集。", "tip": "务必提前在『琼州海峡轮渡管家』小程序购好次日船票；燃油车开航前90分钟、新能源120分钟到港。", "transportToNext": "傍晚到港后按票进港待渡，或住徐闻县城次日一早过海"}, {"name": "徐闻港候渡", "time": "16:00-", "duration": "待渡", "cost": "—", "coord": [110.165, 20.28], "desc": "大陆最南端登船口。徐闻港↔海口新海港为最优航线（航程约90min、班次最密、设施新）。", "tip": "人车分离：乘客带身份证到候船厅取票，司机开车上船；新能源专班走海安新港↔秀英港（人车不同船）。"}], "food": ["午餐：玉林/湛江途中", "晚餐：徐闻县城海鲜、腌粉"], "stay": "住徐闻港周边或徐闻县城；次日一早即可登船过海"}, {"day": 3, "title": "过海入琼 · 海口初印象", "color": "#4facfe", "summary": "轮渡过琼州海峡抵海口，下午逛骑楼老街与火山口地质公园，吃一顿椰子鸡。", "stops": [{"name": "徐闻港→海口新海港（轮渡）", "time": "08:30-11:30", "duration": "约3h(含排队)", "cost": "小车进岛¥415.5含司机+乘客¥41.5/人", "coord": [110.07, 20.08], "desc": "航程约90分钟，车辆随船过海；下船先司机取车、再与乘客汇合。", "tip": "开航前6小时内才能进港；迟到会被改签下一班。关注停航公告（大雾/台风）。"}, {"name": "海口骑楼老街", "time": "13:30-16:00", "duration": "2.5h", "cost": "免费", "coord": [110.3356, 20.0448], "desc": "南洋风骑楼建筑群，水巷口、中山路一带最集中，老字号与咖啡馆交错。", "tip": "尝海南粉、清补凉；骑楼拍照上午顺光更出片。"}, {"name": "海口火山口地质公园", "time": "16:30-18:30", "duration": "2h", "cost": "¥50", "coord": [110.2234, 19.9298], "desc": "雷琼世界地质公园，登马鞍岭火山口看玄武岩地貌，城市绿肺。", "tip": "傍晚光线柔和、登顶不晒；带水与驱蚊。"}], "food": ["晚餐：椰子鸡火锅（海口招牌，文昌鸡+椰子水汤底），人均¥80-120"], "stay": "住海口（西海岸或骑楼附近，地铁+滨海便利）"}, {"day": 4, "title": "东线 · 文昌侨乡 → 琼海博鳌", "color": "#43c6ac", "summary": "沿东线高速南下，文昌看东郊椰林与航天发射场，下午到琼海博鳌。", "stops": [{"name": "文昌 · 东郊椰林", "time": "09:30-11:30", "duration": "2h", "cost": "免费", "coord": [110.8629, 19.559], "desc": "万亩原生态椰林海岸，椰影沙滩、渔村风情，骑行或漫步都舒服。", "tip": "可顺路去淇水湾火箭观测点蹲发射（需提前查发射日程，不保证）。"}, {"name": "文昌航天发射场（龙楼镇）", "time": "11:30-12:30", "duration": "1h", "cost": "观礼台¥50-100(以官方为准)", "coord": [110.951, 19.614], "desc": "我国最年轻发射场，低纬滨海，常发长征系列与空间站货运船。", "tip": "非发射期以观礼/科普参观为主；关注官方发射日程再决定是否停留。"}, {"name": "琼海 · 博鳌亚洲论坛", "time": "15:00-17:30", "duration": "2.5h", "cost": "会址¥60/玉带滩另购", "coord": [110.5762, 19.214], "desc": "万泉河入海口，论坛永久会址+玉带滩（河海分隔的狭长沙滩），万泉河游船可加。", "tip": "玉带滩与博鳌水城联游；傍晚河边散步很惬意。"}], "food": ["午餐：文昌鸡（四大名菜之首），人均¥60", "晚餐：琼海杂粮甜品、嘉积鸭"], "stay": "住琼海或继续开到万宁（约50km/40min）"}, {"day": 5, "title": "万宁 · 冲浪与海岸", "color": "#a18cd1", "summary": "万宁是海南冲浪与滨海度假核心，日月湾浪点、石梅湾白沙滩、兴隆植物园。", "stops": [{"name": "日月湾冲浪", "time": "09:30-12:00", "duration": "2.5h", "cost": "冲浪体验¥150-300/课", "coord": [110.0738, 18.6958], "desc": "国家冲浪训练基地，浪稳适合新手；岸边冲浪店、咖啡馆、滑板文化浓。", "tip": "零基础报一节体验课即可；不下水也适合海边咖啡发呆、拍日落。"}, {"name": "石梅湾 / 神州半岛", "time": "14:30-17:00", "duration": "2.5h", "cost": "免费(灯塔步行)", "coord": [110.2, 18.7], "desc": "石梅湾白沙滩+九里书屋文艺感强；神州半岛灯塔是网红出片机位。", "tip": "神州半岛灯塔需步行或骑行进，日落前1小时最出片。"}, {"name": "兴隆热带植物园", "time": "17:00-18:30", "duration": "1.5h", "cost": "¥50", "coord": [110.11, 18.74], "desc": "华侨农场旗下，咖啡、胡椒、可可等热带作物科普，可尝兴隆咖啡。", "tip": "傍晚前入园避开正午暴晒；园区较大建议乘电瓶车。"}], "food": ["午餐：日月湾冲浪主题餐吧", "晚餐：万宁海鲜/兴隆咖啡+印尼风味小吃，人均¥80"], "stay": "住万宁（石梅湾/日月湾/神州半岛，民宿与度假酒店多）"}, {"day": 6, "title": "陵水 → 三亚", "color": "#f78fb3", "summary": "陵水分界洲岛看玻璃海，下午抵达三亚，亚龙湾戏水、三亚湾夜市收尾。", "stops": [{"name": "陵水 · 分界洲岛", "time": "09:30-12:30", "duration": "3h", "cost": "船票+门票¥130左右", "coord": [110.2002, 18.5786], "desc": "牛岭分隔南北气候，海水能见度极高（玻璃海），潜水/摩托艇/海洋馆都行。", "tip": "上岛轮渡约15min；防晒+防水袋必备；旺季早上去人少。"}, {"name": "三亚 · 亚龙湾", "time": "15:00-17:30", "duration": "2.5h", "cost": "免费(沙滩)", "coord": [109.633, 18.219], "desc": "三亚最负盛名海湾，沙细水清，适合游泳与沙滩漫步。", "tip": "亚龙湾沙滩对游客开放；高端酒店区公共段可进，停车问清。"}, {"name": "三亚湾 · 椰梦长廊 / 第一市场", "time": "18:30-21:00", "duration": "2.5h", "cost": "晚餐人均¥100-150", "coord": [109.5, 18.27], "desc": "22km椰林海岸线看日落；第一市场买海鲜找加工店现做，最本地。", "tip": "海鲜加工先问清『加工费/秤』，货比两家；椰梦长廊蓝调时刻最出片。"}], "food": ["午餐：陵水酸粉、疍家海鲜", "晚餐：第一市场海鲜加工（和乐蟹/芒果螺/清蒸鱼）"], "stay": "住三亚（三亚湾便利省钱/亚龙湾度假感强/海棠湾近免税店）"}, {"day": 7, "title": "三亚深度 + 启程返程", "color": "#fddb92", "summary": "上午玩南山寺或天涯海角，下午视体力西线返海口徐闻（岛内约300km/4h），夜渡或续返。", "stops": [{"name": "南山文化旅游区", "time": "09:00-12:00", "duration": "3h", "cost": "¥108", "coord": [109.2039, 18.2971], "desc": "108米海上观音，南山寺祈福、海滨园林，佛教文化地标。", "tip": "园区大，电瓶车省力；防晒与饮水备足。"}, {"name": "天涯海角 / 海棠湾免税（二选一）", "time": "13:30-15:30", "duration": "2h", "cost": "天涯¥64/免税店免费", "coord": [109.27, 18.3], "desc": "天涯海角是地标打卡；想购物去海棠湾国际免税城（需离岛机票/船票提货）。", "tip": "免税购物提前在『cdf海南免税』 APP 下单，凭离岛凭证提货。"}, {"name": "西线返程：三亚→海口→徐闻", "time": "16:00-21:00", "duration": "约4-5h(含西线高速)", "cost": "油费+返程轮渡", "coord": [110.07, 20.08], "desc": "走海南西线高速（环岛西线）经尖峰岭/莺歌海/儋州返海口，沿海风光与原生态强于东线。", "tip": "当晚可赶徐闻港夜渡返粤，或海口住一晚次日过海；返程大陆段（徐闻→宁乡约1135km）建议再预留2天。"}], "food": ["午餐：南山素斋或三亚本地菜", "晚餐：返程途中简餐"], "stay": "夜宿徐闻港附近，或直接开回广东境内"}], "foods": [{"name": "文昌鸡", "price": "人均¥60", "rec": "白切蘸酱+鸡油饭，海南四大名菜之首", "source": "公开资料+大众点评"}, {"name": "椰子鸡火锅", "price": "人均¥80-120", "rec": "文昌鸡+椰子水汤底，海口/三亚均有", "source": "门店"}, {"name": "清补凉 / 海南粉", "price": "¥10-20", "rec": "海口街头消暑甜品与早餐粉", "source": "本地惯例"}, {"name": "三亚第一市场海鲜", "price": "人均¥100-150", "rec": "自选海鲜+加工店现做，和乐蟹/芒果螺", "source": "公开资料"}, {"name": "兴隆咖啡 / 印尼小吃", "price": "¥20-40", "rec": "万宁兴隆华侨风味", "source": "本地惯例"}, {"name": "陵水酸粉", "price": "¥15", "rec": "陵水特色米粉，酸辣开胃", "source": "公开资料"}], "hotels": [{"area": "海口（西海岸/骑楼附近）", "price": "¥250-600/晚", "rec": "地铁便利、近滨海与老街，适合首晚休整"}, {"area": "万宁（石梅湾/日月湾/神州半岛）", "price": "¥300-900/晚", "rec": "度假酒店与冲浪民宿多，氛围年轻"}, {"area": "三亚（三亚湾/亚龙湾/海棠湾）", "price": "¥350-1200/晚", "rec": "三亚湾性价比高、亚龙湾度假感强、海棠湾近免税店"}, {"area": "徐闻（过海前一晚）", "price": "¥150-300/晚", "rec": "港口附近家庭旅馆，方便次日早渡"}], "pitfalls": [{"wrong": "到港口现场买轮渡票", "right": "提前在『琼州海峡轮渡管家』线上购票（进岛预售15天/每日9:00放票），节假日/新能源专班尤需抢"}, {"wrong": "新能源车直接开去普通船", "right": "新能源必须走海安新港↔秀英港专班，且人车不同船（司机搭保姆船），提前15天抢专班票"}, {"wrong": "卡点到港", "right": "燃油车开航前90分钟、新能源120分钟到港；开航前6h内才放行进港，迟到改签下一班"}, {"wrong": "10月只带夏装", "right": "海南10月仍30°C+且午后多雷阵雨，防晒+雨具+驱蚊+薄外套（甲板风大）都要带"}, {"wrong": "岛内超速赶路", "right": "海南区间测速多、限速严，环岛高速别飙车，预留堵车与景点停车时间"}, {"wrong": "三亚海鲜不问价就加工", "right": "第一市场先确认『秤+加工费』，货比两家，保留小票"}, {"wrong": "忽略停航风险", "right": "大雾/台风会停航，出发前查『琼州海峡轮渡管家』公告，往返都留1天缓冲"}], "budget": [{"cat": "油费/电费(往返约3000km)", "eco": "¥800(新能源)", "comfort": "¥2400(燃油SUV)"}, {"cat": "过路费(大陆高速往返)", "eco": "¥1100", "comfort": "¥1100"}, {"cat": "轮渡(小车往返+2人)", "eco": "¥1000", "comfort": "¥1000"}, {"cat": "住宿(约6晚)", "eco": "¥1500", "comfort": "¥3000"}, {"cat": "餐饮(2人×7天)", "eco": "¥2100", "comfort": "¥4200"}, {"cat": "门票/体验", "eco": "¥600", "comfort": "¥1100"}], "tips": ["核心前提：自驾去海南必须轮渡。最优航线徐闻港↔海口新海港，航程约90分钟。", "购票唯一官方：『琼州海峡轮渡管家』小程序/APP；新能源专班走海安新港↔秀英港。", "总耗时参考：宁乡→徐闻港约1135km/11.7h；海口→三亚东线约272km/3.5h（均高德实测）。", "真正在海南游玩约5天（Day3-7），往返各需1-2天驾驶，整趟约9天；若只休7天可压缩 Day1 直达湛江。", "10月气候：海口/三亚实测29-34°C、午后雷阵雨，带防晒+雨具；台风季末仍需关注停航。", "岛内充电：新能源覆盖尚可但西线稀疏，提前规划；燃油车过海前加满油。", "免税购物：海棠湾/日月广场凭离岛凭证提货，提前在 cdf APP 下单更划算。", "地图坐标 GCJ-02，与高德底图对齐；部分景点坐标为近似，出行前用高德复核。"], "photoSpots": [{"name": "万宁日月湾日落", "bestTime": "日落前1小时", "spotType": "海岸/冲浪", "tip": "海边咖啡座+冲浪剪影，广角低角度拍浪花与晚霞"}, {"name": "神州半岛灯塔", "bestTime": "下午至日落", "spotType": "地标", "tip": "步行/骑行进半岛，白灯塔配蓝海，顺光出片"}, {"name": "陵水分界洲岛玻璃海", "bestTime": "上午", "spotType": "海岛", "tip": "上岛后栈道俯拍海水渐变蓝绿，防水壳拍水下"}, {"name": "三亚湾椰梦长廊蓝调", "bestTime": "日落后30分钟", "spotType": "夜景/海岸", "tip": "22km椰林+晚霞，三脚架长曝拍车流与天空"}, {"name": "海口骑楼老街", "bestTime": "上午顺光", "spotType": "人文", "tip": "水巷口骑楼立面+斑驳墙，广角仰拍建筑线条"}, {"name": "文昌淇水湾火箭观测", "bestTime": "发射日(需查日程)", "spotType": "特殊", "tip": "蹲长征/货运船发射，长焦拍升空，非发射期不保证"}], "research": [{"dimension": "坐标/POI", "claim": "宁乡→徐闻港 驾车约1134.95km、约11.67小时（高德路径规划，速度最快策略）", "sourceType": "official-web", "sourceName": "高德地图 Web 服务", "channel": "高德 driving 方向 API", "url": "https://lbs.amap.com/", "assertType": "运营事实", "checkedAt": "2026-10-03", "confidence": "high", "impact": "transport", "routeImpact": "会改变路线"}, {"dimension": "坐标/POI", "claim": "海口→三亚（东线）驾车约271.8km、约3.53小时（高德路径规划）", "sourceType": "official-web", "sourceName": "高德地图 Web 服务", "channel": "高德 driving 方向 API", "url": "https://lbs.amap.com/", "assertType": "运营事实", "checkedAt": "2026-10-03", "confidence": "high", "impact": "transport", "routeImpact": "顺路"}, {"dimension": "坐标/POI", "claim": "文昌东郊椰林 [110.8629,19.5590]、陵水分界洲岛 [110.2002,18.5786]、三亚南山寺 [109.2039,18.2971]、桂林市 [110.1798,25.2356]、海口火山口 [110.2234,19.9298] 为 高德地理编码返回坐标(GCJ-02)", "sourceType": "official-web", "sourceName": "高德地图 Web 服务", "channel": "高德 geo 地理编码 API", "url": "https://lbs.amap.com/", "assertType": "运营事实", "checkedAt": "2026-10-03", "confidence": "high", "impact": "visual", "routeImpact": "顺路"}, {"dimension": "坐标/POI", "claim": "海口骑楼老街、琼海博鳌、万宁日月湾、三亚亚龙湾坐标为高精度近似(GCJ-02)，因高德免费 Key 当日 QPS 限流未二次核验", "sourceType": "agent-inferred", "sourceName": "WorkBuddy 近似推算", "channel": "已知地标坐标", "assertType": "推断", "checkedAt": "2026-10-03", "confidence": "mid", "impact": "visual", "routeImpact": "顺路"}, {"dimension": "天气/季节", "claim": "10月上旬海口 29-34°C 多云/雷阵雨，三亚 31-34°C 多云/雷阵雨（高德实况预报 10-03 至 10-06）", "sourceType": "official-web", "sourceName": "高德地图天气 API", "channel": "高德 weather 天气 API", "url": "https://lbs.amap.com/", "assertType": "运营事实", "checkedAt": "2026-10-03", "confidence": "high", "impact": "schedule", "routeImpact": "顺路"}, {"dimension": "大交通/轮渡", "claim": "小车过海票价：进岛415.5元/车(含司机1人)、出岛413.5元/车；乘客41.5元/人；1.2-1.5m儿童22.5元；最优航线徐闻港↔海口新海港(航程约90分钟)", "sourceType": "official-web", "sourceName": "徐闻港官网 / 琼州海峡轮渡管家", "channel": "WebSearch 徐闻港官网+轮渡管家", "url": "http://www.xuwen.gov.cn/", "assertType": "运营事实", "checkedAt": "2026-10-03", "confidence": "high", "impact": "transport", "routeImpact": "会改变路线"}, {"dimension": "大交通/轮渡", "claim": "新能源车必须走『海安新港↔秀英港』专班，人车不同船(司机搭保姆船)，提前15天抢专班票；燃油车开航前90分钟、新能源120分钟到港", "sourceType": "public", "sourceName": "琼州海峡轮渡管家 / 太平洋汽车网", "channel": "WebSearch 轮渡攻略(2026)", "url": "https://m.pcauto.com.cn/baike/2049158/3069189", "assertType": "运营事实", "checkedAt": "2026-10-03", "confidence": "high", "impact": "transport", "routeImpact": "会改变路线"}, {"dimension": "玩法/路线", "claim": "第一次来海南最经典的7日海岸线为东线：海口→文昌→琼海→万宁→陵水→三亚（任意两城车程约1h，也可全程自驾沿海公路）", "sourceType": "public", "sourceName": "海南旅游知识库(ima.qq.com wiki)", "channel": "WebSearch 海南路线", "url": "https://ima.qq.com/", "assertType": "体验判断", "checkedAt": "2026-10-03", "confidence": "mid", "impact": "schedule", "routeImpact": "顺路"}, {"dimension": "费用参考", "claim": "合肥→三亚类似里程自驾参考：燃油SUV油费约1600+过路约800+轮渡小车415(含司机)+乘客41.5/人+住宿餐饮约900 ≈ 3800元/2人（可作本线费用量级参照）", "sourceType": "public", "sourceName": "新浪汽车自驾费用拆解", "channel": "WebSearch 自驾费用", "url": "https://www.sina.cn/news/article/comos_niqskus6012008.html", "assertType": "体验判断", "checkedAt": "2026-10-03", "confidence": "mid", "impact": "booking", "routeImpact": "顺路"}], "uncertain": ["轮渡节假日/暑期票源紧张，以『琼州海峡轮渡管家』实时放票与候补为准，本攻略票价为2026年参考。", "文昌航天发射观礼需提前查官方发射日程，非发射期仅科普参观，不保证看到升空。", "岛内景区票价、开放时间、停车以各官方公众号/现场为准，页面数值为参考。", "部分景点坐标（海口骑楼、琼海博鳌、万宁日月湾、三亚亚龙湾）为近似，出行前用高德复核。", "台风/大雾可能临时停航，往返均建议预留至少1天缓冲，避免影响返程。"]}; } catch(e){ return SAMPLE; } })();
+/* ====================================================================== */
+
+const SAMPLE = {
+  meta:{title:"示例 · 成都4天美食文化游",subtitle:"模板示例 · 替换数据即可生成你的专属攻略",city:"成都",days:4,
+    theme:"美食文化游",departure:"北京",tags:["美食","文化","休闲"],updated:"2026-10-02",
+    note:"这是模板自带的示例数据。用 build_html.py 注入真实 JSON 后会替换本示例。"},
+  overview:["Day1 老成都慢生活：宽窄巷子—人民公园—锦里","Day2 人文与自然：武侯祠—杜甫草堂—春熙路",
+    "Day3 萌宠与古迹：大熊猫基地—青城山","Day4 水利奇迹：都江堰—返程"],
+  days:[
+    {day:1,title:"老成都的慢生活",color:"#f6a085",summary:"在巷子里喝茶，在公园里看当地人掏耳朵。",
+     stops:[
+      {name:"宽窄巷子",time:"09:30-12:00",duration:"2.5h",cost:"免费",coord:[104.056,30.669],
+       desc:"由宽巷子、窄巷子、井巷子组成的清朝古街道，适合拍照与闲逛。",tip:"早上去人少、光线好；网红店排队久，随意进一家茶馆即可。"},
+      {name:"人民公园",time:"13:30-15:30",duration:"2h",cost:"免费",coord:[104.063,30.660],
+       desc:"鹤鸣茶社喝盖碗茶，体验采耳。",tip:"采耳选明码标价摊位，约30-50元。",transportToNext:"步行 1.2km / 15分钟"}
+     ],food:["午餐：公园附近老字号川菜，人均¥60"],stay:"建议住春熙路/太古里附近，方便夜游"},
+    {day:2,title:"人文与自然",color:"#4facfe",summary:"三国文化与诗意草堂。",
+     stops:[
+      {name:"武侯祠",time:"09:00-11:00",duration:"2h",cost:"¥50",coord:[104.048,30.642],
+       desc:"中国唯一的君臣合祀祠庙，三国迷必去。",tip:"联票含锦里，可一并游览。"},
+      {name:"杜甫草堂",time:"14:00-16:30",duration:"2.5h",cost:"¥55",coord:[104.025,30.658],
+       desc:"诗圣杜甫流寓成都的居所，园林清幽。",tip:"红墙竹影是最出片机位。"}
+     ],food:["晚餐：火锅（小龙坎/蜀大侠），人均¥100"],stay:"同前晚"},
+    {day:3,title:"萌宠与古迹",color:"#a18cd1",summary:"看熊猫要趁早，下午爬青城山。",
+     stops:[
+      {name:"大熊猫繁育研究基地",time:"07:30-10:30",duration:"3h",cost:"¥55",coord:[104.146,30.733],
+       desc:"看幼年熊猫最活跃，建议开园即到。",tip:"8点前到能看到喂食；观光车¥10节省体力。"},
+      {name:"青城山(前山)",time:"13:00-17:00",duration:"4h",cost:"¥90",coord:[103.570,30.900],
+       desc:"道教名山，幽静避暑。",tip:"缆车上下更省力，徒步约3小时。"}
+     ],food:["午餐：山脚农家乐，豆腐宴¥50"],stay:"住都江堰或回成都"},
+    {day:4,title:"水利奇迹",color:"#fddb92",summary:"两千年不衰的都江堰。",
+     stops:[
+      {name:"都江堰景区",time:"09:00-12:30",duration:"3.5h",cost:"¥80",coord:[103.618,31.003],
+       desc:"李冰父子修建的无坝引水工程，世界文化遗产。",tip:"鱼嘴—飞沙堰—宝瓶口顺线走，讲解器¥20。"}
+     ],food:["午餐：都江堰古城小吃，¥40"],stay:"下午返程"}
+  ],
+  foods:[
+    {name:"陈麻婆豆腐(青华路)",price:"人均¥60",rec:"麻婆豆腐、水煮牛肉",source:"大众点评"},
+    {name:"小龙坎老火锅",price:"人均¥100",rec:"牛油锅底、毛肚、鹅肠",source:"门店"},
+    {name:"钟水饺(春熙路)",price:"人均¥25",rec:"红油水饺、甜水面",source:"老字号"}
+  ],
+  hotels:[
+    {area:"春熙路/太古里",price:"¥300-700/晚",rec:"地铁便利、夜生活丰富、近商圈"},
+    {area:"宽窄巷子周边",price:"¥350-800/晚",rec:"民宿院落感强、适合慢游"}
+  ],
+  pitfalls:[
+    {wrong:"在景区门口跟野导买『优惠套票』",right:"官方公众号/携程提前购票，认准官方渠道"},
+    {wrong:"中午去熊猫基地",right:"7:30开园即到，熊猫上午最活跃"},
+    {wrong:"火锅点特辣第一次就挑战",right:"微辣/中辣起步，配鸳鸯锅更稳妥"}
+  ],
+  budget:[
+    {cat:"住宿(3晚)",eco:"¥900",comfort:"¥1500"},
+    {cat:"餐饮",eco:"¥600",comfort:"¥1000"},
+    {cat:"门票",eco:"¥380",comfort:"¥380"},
+    {cat:"市内交通",eco:"¥150",comfort:"¥400"},
+    {cat:"往返大交通",eco:"¥1200",comfort:"¥2000"}
+  ],
+  tips:["成都地铁很方便，扫码乘车","带好肠胃药，辣度循序渐进","景点间用高德/百度导航，坐标已按GCJ-02校准"]
+};
+
+/* ---------- 工具 ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1800);}
+
+/* ---------- 渲染 ---------- */
+function render(){
+  const g=GUIDE, m=g.meta||{};
+  document.title=m.title||'旅游攻略';
+  $('#hTitle').textContent=m.title||'';
+  $('#hSub').textContent=m.subtitle||'';
+  (m.tags||[]).forEach(t=>$('#hTags').appendChild(el('span','tag',t)));
+  $('#hMeta').innerHTML=
+    `<span><b>城市</b> ${m.city||'-'}</span>`+
+    `<span><b>天数</b> ${m.days||(g.days?g.days.length:'-')}天</span>`+
+    `<span><b>主题</b> ${m.theme||'-'}</span>`+
+    (m.departure?`<span><b>出发地</b> ${m.departure}</span>`:'')+
+    (m.updated?`<span><b>更新</b> ${m.updated}</span>`:'');
+  $('#mapNote').textContent='地图底图来自高德(AutoNavi)瓦片，采用 GCJ-02 坐标系，与景点坐标一致、无偏移。'+(m.note?' ｜ '+m.note:'');
+
+  (g.overview||[]).forEach(o=>$('#overview').appendChild(el('span','chip',o)));
+
+  const daysWrap=$('#days');
+  (g.days||[]).forEach(d=>{
+    const card=el('div','day'); card.dataset.day=d.day;
+    const hd=el('div','day-hd');
+    const badge=el('div','day-badge',String(d.day)); badge.style.background=d.color||'#667eea';
+    const t=el('div','t',`<div class="d">Day ${d.day} · ${d.title||''}</div><div class="s">${d.summary||''}</div>`);
+    const ar=el('div','ar','▼');
+    hd.append(badge,t,ar);
+    hd.onclick=()=>card.classList.toggle('collapsed');
+    const body=el('div','day-body');
+    (d.stops||[]).forEach((s,i)=>{
+      const stop=el('div','stop');
+      const tm=el('div','tm',`${s.time||''}<span class="du">${s.duration||''}</span>`);
+      const dot=el('div','dot');
+      const b=el('div','body');
+      const nm=el('div','nm',`${s.name||''}${s.cost?`<span class="cost">${s.cost}</span>`:''}`);
+      b.appendChild(nm);
+      if(s.desc)b.appendChild(el('div','desc',s.desc));
+      if(s.tip)b.appendChild(el('div','tip','💡 '+s.tip));
+      const cbId=`cb-${d.day}-${i}`;
+      const cb=el('label','cb',`<input type="checkbox" id="${cbId}"> 已打卡`);
+      cb.querySelector('input').onchange=e=>{markVisited(cbId,e.target.checked);};
+      b.appendChild(cb);
+      if(s.transportToNext)b.appendChild(el('div','tn','➡️ 下一站：'+s.transportToNext));
+      stop.append(tm,dot,b);
+      body.appendChild(stop);
+    });
+    if(d.food&&d.food.length){const f=el('div','day-foot');f.appendChild(el('div','blk',`<span class="lbl">🍽️ 美食</span>`+(d.food.join('；'))));body.appendChild(f);}
+    if(d.stay){const f=el('div','day-foot');f.appendChild(el('div','blk',`<span class="lbl">🏨 当晚住宿</span>${d.stay}`));body.appendChild(f);}
+    card.append(hd,body);
+    daysWrap.appendChild(card);
+  });
+
+  (g.foods||[]).forEach(f=>{
+    $('#foods').appendChild(el('div','food',
+      `<div class="nm">${f.name||''}</div><div class="pr">${f.price||''}</div><div class="rc">${f.rec||''}</div>`+
+      (f.source?`<div class="sr">来源：${f.source}</div>`:'')));
+  });
+
+  (g.hotels||[]).forEach(h=>{
+    $('#hotels').appendChild(el('div','hotel',
+      `<div class="a">${h.area||''}</div><div class="p">${h.price||''}</div><div class="w">${h.rec||''}</div>`));
+  });
+
+  (g.pitfalls||[]).forEach(p=>{
+    $('#pits').appendChild(el('div','pit',
+      `<div class="x">✗ ${p.wrong||''}</div><div class="vs">→</div><div class="ok">✓ ${p.right||''}</div>`));
+  });
+
+  renderBudget(g.budget||[]);
+  (g.tips||[]).forEach(t=>$('#tips').appendChild(el('li',null,t)));
+  renderPhotoSpots(g);
+  renderSources(g);
+  if(!(g.photoSpots&&g.photoSpots.length)){const ps=document.getElementById('sec-photo');if(ps)ps.style.display='none';}
+  $('#foot').textContent='本攻略由 WorkBuddy 生成 · 数据仅供参考，出行前请再次核实票价、营业时间与天气。';
+
+  buildNav();
+  setTimeout(loadMap,200);
+  restoreLocal();
+}
+
+function renderBudget(rows){
+  const tbl=$('#budget');
+  tbl.innerHTML='<tr><th>项目</th><th>经济型</th><th>舒适型(可改)</th></tr>';
+  rows.forEach((r,i)=>{
+    const tr=el('tr');
+    tr.innerHTML=`<td>${r.cat||''}</td><td>${r.eco||''}</td>`+
+      `<td><input data-i="${i}" value="${r.comfort||''}"></td>`;
+    tbl.appendChild(tr);
+    tr.querySelector('input').addEventListener('input',()=>{computeBudget(rows);});
+  });
+  const tr=el('tr','total');tr.innerHTML='<td>合计/人</td><td id="ecoTot"></td><td id="comTot"></td>';
+  tbl.appendChild(tr);
+  computeBudget(rows);
+}
+function computeBudget(rows){
+  let e=0,c=0;
+  const inputs=$('#budget').querySelectorAll('input[data-i]');
+  inputs.forEach(inp=>{const i=+inp.dataset.i;const cv=parseFloat(String(inp.value).replace(/[^\d.]/g,''))||0;c+=cv;
+    const ev=parseFloat(String((rows[i]&&rows[i].eco||'').replace(/[^\d.]/g,''))||0);e+=ev;});
+  $('#ecoTot').textContent='¥'+e.toLocaleString('zh-CN');
+  $('#comTot').textContent='¥'+c.toLocaleString('zh-CN');
+}
+
+function renderSources(g){
+  const sw=$('#srcWrap'); if(!sw)return;
+  const items=g.research||g.sources||[];
+  const cfMap={high:['cf-high','高置信'],mid:['cf-mid','中置信'],low:['cf-low','低置信'],
+    confirmed:['cf-high','已核'],estimated:['cf-mid','估算'],unknown:['cf-low','待核']};
+  const tpMap={user:['tp-user','用户确认'],'official-realtime':['tp-official-realtime','官方实时'],
+    'official-web':['tp-official-web','官方网页'],public:['tp-public','公开资料'],'agent-inferred':['tp-agent-inferred','Agent推断']};
+  if(items.length){
+    const byDim={};
+    items.forEach(s=>{const k=s.dimension||'其他'; (byDim[k]=byDim[k]||[]).push(s);});
+    Object.keys(byDim).forEach(dim=>{
+      sw.appendChild(el('div','src-dim',dim));
+      byDim[dim].forEach(s=>{
+        const cf=cfMap[s.confidence]||cfMap[s.status]||cfMap.mid;
+        const tp=tpMap[s.sourceType]||null;
+        const head=el('div','rp-head');
+        head.appendChild(el('span','rp-claim',s.claim||s.note||'(无主张)'));
+        head.appendChild(el('span','badge '+cf[0],cf[1]));
+        if(tp)head.appendChild(el('span','badge '+tp[0],tp[1]));
+        const card=el('div','rp'); card.appendChild(head);
+        let meta='';
+        const srcName=s.sourceName||s.channel||'';
+        if(srcName)meta+='<b>来源</b>：'+esc(srcName)+'　';
+        if(s.assertType)meta+='<b>主张</b>：'+esc(s.assertType)+'　';
+        if(s.checkedAt)meta+='<b>核验</b>：'+esc(s.checkedAt)+'　';
+        if(s.url)meta+='<a href="'+esc(s.url)+'" target="_blank" rel="noopener">'+esc(s.url)+'</a>';
+        if(meta)card.appendChild(el('div','rp-meta',meta));
+        const row=el('div','rp-row');
+        if(s.impact)row.appendChild(el('span',null,'<b>影响</b>：'+esc(s.impact)));
+        if(s.routeImpact)row.appendChild(el('span',null,'<b>路线</b>：'+esc(s.routeImpact)));
+        if(s.note&&s.claim)row.appendChild(el('span',null,'<b>说明</b>：'+esc(s.note)));
+        if(row.childNodes.length)card.appendChild(row);
+        if(s.corroboration)card.appendChild(el('div','rp-corrob','独立佐证：'+esc(s.corroboration)));
+        sw.appendChild(card);
+      });
+    });
+  }
+  if(g.uncertain&&g.uncertain.length){
+    const u=el('div','unc');
+    u.appendChild(el('div','src-dim','待核实 / 存疑'));
+    const ul=el('ul','tips');
+    g.uncertain.forEach(x=>ul.appendChild(el('li',null,'⚠️ '+x)));
+    u.appendChild(ul); sw.appendChild(u);
+  }
+  if(!items.length&&(!g.uncertain||!g.uncertain.length)){
+    sw.appendChild(el('div','desc','本次未单独登记来源维度；关键票价/坐标已在各模块注明核实状态。'));
+  }
+}
+
+function renderPhotoSpots(g){
+  const grid=$('#photoGrid'); if(!grid)return;
+  (g.photoSpots||[]).forEach(p=>{
+    const c=el('div','photo-card');
+    c.appendChild(el('h4',null,'📍 '+(p.name||'')));
+    let m='';
+    if(p.bestTime)m+='最佳：'+esc(p.bestTime)+'　';
+    if(p.spotType)m+='类型：'+esc(p.spotType);
+    if(m)c.appendChild(el('div','ph-meta',m));
+    if(p.tip)c.appendChild(el('div','ph-tip',p.tip||''));
+    grid.appendChild(c);
+  });
+}
+
+/* ---------- 地图 ---------- */
+function loadMap(){
+  if(typeof L==='undefined'){$('#map').innerHTML='<div style="padding:30px;text-align:center;color:#999">地图组件加载失败（可能离线），不影响下方文字攻略。</div>';return;}
+  const g=GUIDE;
+  const all=[];(g.days||[]).forEach(d=>(d.stops||[]).forEach(s=>{if(s.coord)all.push(s.coord);}));
+  if(!all.length){$('#map').innerHTML='<div style="padding:30px;text-align:center;color:#999">暂无坐标数据，无法绘制地图。</div>';return;}
+  const _map=L.map('map',{zoomControl:true}).setView(all[0],11);
+  L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
+    {subdomains:'1234',maxZoom:18,attribution:'© 高德地图'}).addTo(_map);
+  const bounds=L.latLngBounds(all);
+  (g.days||[]).forEach(d=>{
+    const pts=(d.stops||[]).filter(s=>s.coord).map(s=>s.coord);
+    if(pts.length>1)L.polyline(pts,{color:d.color||'#667eea',weight:4,opacity:.7,dashArray:'1,8'}).addTo(_map);
+    (d.stops||[]).forEach((s,i)=>{
+      if(!s.coord)return;
+      const icon=L.divIcon({className:'',html:`<div class="mk" style="background:${d.color||'#667eea'}"><span>${i+1}</span></div>`,iconSize:[24,24],iconAnchor:[12,24]});
+      const mk=L.marker(s.coord,{icon}).addTo(_map).bindPopup(`<b>Day${d.day} ${s.name}</b><br>${s.time||''} · ${s.cost||''}`);
+      mk.on('click',()=>{const c=document.querySelector(`.day[data-day="${d.day}"]`);if(c){c.classList.remove('collapsed');c.scrollIntoView({behavior:'smooth',block:'center'});}});
+    });
+  });
+  if(all.length>1)_map.fitBounds(bounds.pad(0.15));
+}
+
+/* ---------- 导航 ---------- */
+function buildNav(){
+  const secs=[['sec-map','地图'],['sec-overview','总览'],['sec-days','每日行程'],['sec-food','美食'],
+    ['sec-hotel','住宿'],['sec-pit','避坑'],['sec-budget','预算'],['sec-tips','Tips'],['sec-photo','摄影'],['sec-sources','来源/存疑']];
+  const tn=$('#topnav'), sn=$('#sidenav');
+  secs.forEach(([id,name])=>{
+    const sec=document.getElementById(id);
+    if(sec&&sec.style.display==='none')return;
+    const b=el('button',null,name);b.onclick=()=>sec.scrollIntoView({behavior:'smooth'});tn.appendChild(b);
+    const a=el('a',null,name);a.href='#'+id;a.textContent=name;sn.appendChild(a);
+  });
+  (GUIDE.days||[]).forEach(d=>{const a=el('a','daylink',`Day ${d.day} ${d.title||''}`);a.href='#sec-days';
+    a.dataset.day=d.day;sn.appendChild(a);});
+  const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){
+    const id=e.target.id;[...tn.children].forEach(b=>b.classList.toggle('active',b.textContent===secName(id)));
+    [...sn.children].forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+id));
+  }});});
+  document.querySelectorAll('section').forEach(s=>obs.observe(s));
+}
+function secName(id){const m={'sec-map':'地图','sec-overview':'总览','sec-days':'每日行程','sec-food':'美食',
+  'sec-hotel':'住宿','sec-pit':'避坑','sec-budget':'预算','sec-tips':'Tips','sec-photo':'摄影','sec-sources':'来源/存疑'};return m[id]||'';}
+
+/* ---------- 本地存储（勾选 + 预算） ---------- */
+const LS_KEY='tg_'+ (GUIDE.meta&&GUIDE.meta.title||'guide');
+function markVisited(id,on){const d=JSON.parse(localStorage.getItem(LS_KEY)||'{}');d.visited=d.visited||{};d.visited[id]=on;localStorage.setItem(LS_KEY,JSON.stringify(d));}
+function saveBudget(){const d=JSON.parse(localStorage.getItem(LS_KEY)||'{}');
+  const vals={};document.querySelectorAll('#budget input[data-i]').forEach(i=>vals[i.dataset.i]=i.value);
+  d.budget=vals;localStorage.setItem(LS_KEY,JSON.stringify(d));toast('预算已保存到本机');}
+function restoreLocal(){const d=JSON.parse(localStorage.getItem(LS_KEY)||'{}');
+  if(d.visited)Object.keys(d.visited).forEach(id=>{const c=document.getElementById(id);if(c)c.checked=d.visited[id];});
+  if(d.budget)document.querySelectorAll('#budget input[data-i]').forEach(i=>{if(d.budget[i.dataset.i]!=null)i.value=d.budget[i.dataset.i];computeBudget(GUIDE.budget||[]);});}
+function resetLocal(){localStorage.removeItem(LS_KEY);location.reload();}
+
+/* ---------- 导出 Markdown ---------- */
+function copyMarkdown(){
+  const g=GUIDE,m=g.meta||{};let md=`# ${m.title||'旅游攻略'}\n\n${m.subtitle||''}\n`;
+  md+=`- 城市：${m.city||'-'} ｜ 天数：${m.days||'-'} ｜ 主题：${m.theme||'-'}\n\n`;
+  md+='## 行程总览\n'+(g.overview||[]).map(o=>'- '+o).join('\n')+'\n\n';
+  (g.days||[]).forEach(d=>{md+=`## Day ${d.day} · ${d.title||''}\n${d.summary||''}\n`;
+    (d.stops||[]).forEach(s=>{md+=`- **${s.name}** ${s.time||''} ${s.cost?('('+s.cost+')'):''}：${s.desc||''}\n`;
+      if(s.tip)md+=`  - 💡 ${s.tip}\n`;});
+    if(d.food)md+='- 🍽️ '+(d.food.join('；'))+'\n';
+    if(d.stay)md+='- 🏨 '+d.stay+'\n';});
+  md+='\n## 美食推荐\n'+(g.foods||[]).map(f=>`- **${f.name}** ${f.price||''}：${f.rec||''}`).join('\n')+'\n';
+  md+='\n## 避坑\n'+(g.pitfalls||[]).map(p=>`- ✗ ${p.wrong} → ✓ ${p.right}`).join('\n')+'\n';
+  if(g.photoSpots&&g.photoSpots.length)md+='\n## 摄影机位\n'+g.photoSpots.map(p=>`- **${p.name||''}**${p.bestTime?('（'+p.bestTime+'）'):''}：${p.tip||''}`).join('\n')+'\n';
+  const items=g.research||g.sources||[];
+  if(items.length){const byDim={};items.forEach(s=>{const k=s.dimension||'其他';(byDim[k]=byDim[k]||[]).push(s);});
+    md+='\n## 信息来源（多维度取证）\n';Object.keys(byDim).forEach(d=>{md+=`### ${d}\n`+byDim[d].map(s=>`- ${(s.claim||s.note||'')}${s.sourceName?(' ｜ '+s.sourceName):''}${s.url?(' '+s.url):''} ［${(s.confidence||s.status||'')}］`).join('\n')+'\n';});}
+  if(g.uncertain&&g.uncertain.length)md+='\n## 待核实\n'+g.uncertain.map(x=>'- ⚠️ '+x).join('\n')+'\n';
+  navigator.clipboard.writeText(md).then(()=>toast('Markdown 已复制')).catch(()=>toast('复制失败，请手动选择'));
+}
+
+render();
+</script>
+</body>
+</html>
